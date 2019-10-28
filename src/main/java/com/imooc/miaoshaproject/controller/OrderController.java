@@ -11,6 +11,7 @@ import com.imooc.miaoshaproject.service.PromoService;
 import com.imooc.miaoshaproject.service.model.OrderModel;
 import com.imooc.miaoshaproject.service.model.UserModel;
 import com.imooc.miaoshaproject.util.CodeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
@@ -34,6 +35,7 @@ import java.util.concurrent.*;
 @Controller("order")
 @RequestMapping("/order")
 @CrossOrigin(origins = {"*"},allowCredentials = "true")
+@Slf4j
 public class OrderController extends BaseController {
     @Autowired
     private OrderService orderService;
@@ -55,13 +57,13 @@ public class OrderController extends BaseController {
 
     private ExecutorService executorService;
 
-    private RateLimiter orderCreateRateLimiter;
+//    private RateLimiter orderCreateRateLimiter;
 
     @PostConstruct
     public void init(){
         executorService = Executors.newFixedThreadPool(20);
 
-        orderCreateRateLimiter = RateLimiter.create(300);
+//        orderCreateRateLimiter = RateLimiter.create(300);
 
     }
 
@@ -81,6 +83,7 @@ public class OrderController extends BaseController {
         Map<String,Object> map = CodeUtil.generateCodeAndPic();
 
         redisTemplate.opsForValue().set("verify_code_"+userModel.getId(),map.get("code"));
+        System.out.println("验证码为" + map.get("code"));
         redisTemplate.expire("verify_code_"+userModel.getId(),10,TimeUnit.MINUTES);
 
         ImageIO.write((RenderedImage) map.get("codePic"), "jpeg", response.getOutputStream());
@@ -132,9 +135,9 @@ public class OrderController extends BaseController {
                                         @RequestParam(name="promoId",required = false)Integer promoId,
                                         @RequestParam(name="promoToken",required = false)String promoToken) throws BusinessException {
 
-        if(!orderCreateRateLimiter.tryAcquire()){
-            throw new BusinessException(EmBusinessError.RATELIMIT);
-        }
+//        if(!orderCreateRateLimiter.tryAcquire()){
+////            throw new BusinessException(EmBusinessError.RATELIMIT);
+////        }
 
         String token = httpServletRequest.getParameterMap().get("token")[0];
         if(StringUtils.isEmpty(token)){
@@ -145,16 +148,16 @@ public class OrderController extends BaseController {
         if(userModel == null){
             throw new BusinessException(EmBusinessError.USER_NOT_LOGIN,"用户还未登陆，不能下单");
         }
-        //校验秒杀令牌是否正确
-        if(promoId != null){
-            String inRedisPromoToken = (String) redisTemplate.opsForValue().get("promo_token_"+promoId+"_userid_"+userModel.getId()+"_itemid_"+itemId);
-            if(inRedisPromoToken == null){
-                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"秒杀令牌校验失败");
-            }
-            if(!org.apache.commons.lang3.StringUtils.equals(promoToken,inRedisPromoToken)){
-                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"秒杀令牌校验失败");
-            }
-        }
+//        //TODO 暂时不看秒杀令牌 校验秒杀令牌是否正确
+//        if(promoId != null){
+//            String inRedisPromoToken = (String) redisTemplate.opsForValue().get("promo_token_"+promoId+"_userid_"+userModel.getId()+"_itemid_"+itemId);
+//            if(inRedisPromoToken == null){
+//                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"秒杀令牌校验失败");
+//            }
+//            if(!org.apache.commons.lang3.StringUtils.equals(promoToken,inRedisPromoToken)){
+//                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"秒杀令牌校验失败");
+//            }
+//        }
 
         //同步调用线程池的submit方法
         //拥塞窗口为20的等待队列，用来队列化泄洪
@@ -174,13 +177,16 @@ public class OrderController extends BaseController {
             }
         });
 
-        try {
-            future.get();
-        } catch (InterruptedException e) {
-            throw new BusinessException(EmBusinessError.UNKNOWN_ERROR);
-        } catch (ExecutionException e) {
-            throw new BusinessException(EmBusinessError.UNKNOWN_ERROR);
-        }
+//        return null;
+
+//        try {
+//            future.get();
+//        } catch (InterruptedException e) {
+//            throw new BusinessException(EmBusinessError.UNKNOWN_ERROR);
+//        } catch (ExecutionException e) {
+//            e.printStackTrace();
+//            throw new BusinessException(EmBusinessError.UNKNOWN_ERROR);
+//        }
 
         return CommonReturnType.create(null);
     }

@@ -3,6 +3,7 @@ package com.imooc.miaoshaproject.mq;
 import com.alibaba.fastjson.JSON;
 import com.imooc.miaoshaproject.dao.ItemDOMapper;
 import com.imooc.miaoshaproject.dao.ItemStockDOMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
@@ -22,6 +23,7 @@ import java.util.Map;
  * Created by hzllb on 2019/2/23.
  */
 @Component
+@Slf4j
 public class MqConsumer {
 
     private DefaultMQPushConsumer consumer;
@@ -49,8 +51,8 @@ public class MqConsumer {
                 Map<String,Object>map = JSON.parseObject(jsonString, Map.class);
                 Integer itemId = (Integer) map.get("itemId");
                 Integer amount = (Integer) map.get("amount");
-
                 itemStockDOMapper.decreaseStock(itemId,amount);
+                log.info("商品Id为{}库存减{}",itemId,amount );
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });
