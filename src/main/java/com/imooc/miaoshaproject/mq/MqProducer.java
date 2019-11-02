@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by hzllb on 2019/2/23.
+ * Created by fengliguantou on 2019/2/23.
  */
 @Component
 public class MqProducer {

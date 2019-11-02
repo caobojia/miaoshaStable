@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="redisson-3.11.5">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/redisson-3.11.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.ideaLibSources/redisson-3.11.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

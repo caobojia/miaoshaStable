@@ -1,7 +1,7 @@
 package com.imooc.miaoshaproject.error;
 
 /**
- * Created by hzllb on 2018/11/13.
+ * Created by fengliguantou on 2018/11/13.
  */
 public enum EmBusinessError implements CommonError {
     //通用错误类型10001

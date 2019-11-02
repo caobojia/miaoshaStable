@@ -6,7 +6,7 @@ import com.imooc.miaoshaproject.service.model.ItemModel;
 import java.util.List;
 
 /**
- * Created by hzllb on 2018/11/18.
+ * Created by fengliguantou on 2018/11/18.
  */
 public interface ItemService {
 

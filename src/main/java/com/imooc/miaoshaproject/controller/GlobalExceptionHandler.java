@@ -17,7 +17,7 @@ import com.imooc.miaoshaproject.error.EmBusinessError;
 import com.imooc.miaoshaproject.response.CommonReturnType;
 
 /**
- * Created by hzllb on 2018/12/22.
+ * Created by fengliguantou on 2018/12/22.
  */
 @ControllerAdvice
 public class GlobalExceptionHandler{

@@ -4,7 +4,7 @@ import com.imooc.miaoshaproject.error.BusinessException;
 import com.imooc.miaoshaproject.service.model.OrderModel;
 
 /**
- * Created by hzllb on 2018/11/18.
+ * Created by fengliguantou on 2018/11/18.
  */
 public interface OrderService {
     //使用1,通过前端url上传过来秒杀活动id，然后下单接口内校验对应id是否属于对应商品且活动已开始

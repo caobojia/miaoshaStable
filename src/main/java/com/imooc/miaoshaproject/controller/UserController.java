@@ -23,7 +23,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by hzllb on 2018/11/11.
+ * Created by fengliguantou on 2018/11/11.
  */
 @Controller("user")
 @RequestMapping("/user")

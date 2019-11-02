@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Created by hzllb on 2018/11/18.
+ * Created by fengliguantou on 2018/11/18.
  */
 public class ValidationResult {
     //校验结果是否有错

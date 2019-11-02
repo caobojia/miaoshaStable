@@ -12,6 +12,8 @@ import com.imooc.miaoshaproject.service.model.OrderModel;
 import com.imooc.miaoshaproject.service.model.UserModel;
 import com.imooc.miaoshaproject.util.CodeUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.redisson.Redisson;
+import org.redisson.api.RLock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Controller;
@@ -27,18 +29,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.*;
 
 /**
- * Created by hzllb on 2018/11/18.
+ * Created by fengliguantou on 2018/11/18.
  */
 @Controller("order")
 @RequestMapping("/order")
 @CrossOrigin(origins = {"*"},allowCredentials = "true")
 @Slf4j
 public class OrderController extends BaseController {
+
     @Autowired
-    private OrderService orderService;
+    private Redisson redisson;
 
     @Autowired
     private HttpServletRequest httpServletRequest;
@@ -56,6 +60,8 @@ public class OrderController extends BaseController {
     private PromoService promoService;
 
     private ExecutorService executorService;
+
+    private final static String userSet = "userSet";
 
 //    private RateLimiter orderCreateRateLimiter;
 
@@ -148,46 +154,24 @@ public class OrderController extends BaseController {
         if(userModel == null){
             throw new BusinessException(EmBusinessError.USER_NOT_LOGIN,"用户还未登陆，不能下单");
         }
-//        //TODO 暂时不看秒杀令牌 校验秒杀令牌是否正确
-//        if(promoId != null){
-//            String inRedisPromoToken = (String) redisTemplate.opsForValue().get("promo_token_"+promoId+"_userid_"+userModel.getId()+"_itemid_"+itemId);
-//            if(inRedisPromoToken == null){
-//                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"秒杀令牌校验失败");
-//            }
-//            if(!org.apache.commons.lang3.StringUtils.equals(promoToken,inRedisPromoToken)){
-//                throw new BusinessException(EmBusinessError.PARAMETER_VALIDATION_ERROR,"秒杀令牌校验失败");
-//            }
-//        }
-
-        //同步调用线程池的submit方法
-        //拥塞窗口为20的等待队列，用来队列化泄洪
-        Future<Object> future = executorService.submit(new Callable<Object>() {
-
-            @Override
-            public Object call() throws Exception {
-                //加入库存流水init状态
-                String stockLogId = itemService.initStockLog(itemId,amount);
-
-
-                //再去完成对应的下单事务型消息机制
-                if(!mqProducer.transactionAsyncReduceStock(userModel.getId(),itemId,promoId,amount,stockLogId)){
-                    throw new BusinessException(EmBusinessError.UNKNOWN_ERROR,"下单失败");
-                }
-                return null;
+        // 设置同一个用户不能连续点击多次 第二次会用分布式锁防止请求进入
+        Integer userId = userModel.getId();
+        RLock redissonLock = redisson.getLock(String.valueOf(userId));
+        try{
+            redissonLock.lock(30, TimeUnit.SECONDS);
+            redisTemplate.opsForSet().add(userSet,userId);
+            //加入库存流水init状态
+            String stockLogId = itemService.initStockLog(itemId,amount);
+            //再去完成对应的下单事务型消息机制
+            if(!mqProducer.transactionAsyncReduceStock(userModel.getId(),itemId,promoId,amount,stockLogId)){
+                throw new BusinessException(EmBusinessError.UNKNOWN_ERROR,"下单失败");
             }
-        });
-
-//        return null;
-
-//        try {
-//            future.get();
-//        } catch (InterruptedException e) {
-//            throw new BusinessException(EmBusinessError.UNKNOWN_ERROR);
-//        } catch (ExecutionException e) {
-//            e.printStackTrace();
-//            throw new BusinessException(EmBusinessError.UNKNOWN_ERROR);
-//        }
-
-        return CommonReturnType.create(null);
+            return CommonReturnType.create(null);
+        }finally {
+            Set<Integer> set = redisTemplate.opsForSet().members(userSet);
+            if(set.contains(userId)){
+                redissonLock.unlock();
+            }
+        }
     }
 }

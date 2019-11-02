@@ -4,7 +4,7 @@ import javax.validation.constraints.*;
 import java.io.Serializable;
 
 /**
- * Created by hzllb on 2018/11/11.
+ * Created by fengliguantou on 2018/11/11.
  */
 public class UserModel implements Serializable{
     private Integer id;

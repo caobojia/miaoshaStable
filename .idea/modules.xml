@@ -3,7 +3,6 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/miaosha.iml" filepath="$PROJECT_DIR$/miaosha.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../rocketmq-externals/rocketmq-console/rocketmq-console-ng.iml" filepath="$PROJECT_DIR$/../rocketmq-externals/rocketmq-console/rocketmq-console-ng.iml" />
     </modules>
   </component>
 </project>

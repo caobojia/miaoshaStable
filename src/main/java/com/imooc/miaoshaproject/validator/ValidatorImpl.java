@@ -9,7 +9,7 @@ import javax.validation.Validator;
 import java.util.Set;
 
 /**
- * Created by hzllb on 2018/11/18.
+ * Created by fengliguantou on 2018/11/18.
  */
 @Component
 public class ValidatorImpl implements InitializingBean{
