@@ -98,7 +98,7 @@ public class OrderServiceImpl implements OrderService {
             orderModel.setItemPrice(itemModel.getPrice());
         }
         orderModel.setPromoId(promoId);
-        orderModel.setOrderPrice(orderModel.getItemPrice().multiply(new BigDecimal(amount)));
+         orderModel.setOrderPrice(orderModel.getItemPrice().multiply(new BigDecimal(amount)));
 
         //生成交易流水号,订单号
         orderModel.setId(generateOrderNo());

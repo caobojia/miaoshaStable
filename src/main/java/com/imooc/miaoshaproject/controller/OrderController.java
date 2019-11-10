@@ -41,8 +41,6 @@ import java.util.concurrent.*;
 @Slf4j
 public class OrderController extends BaseController {
 
-    @Autowired
-    private Redisson redisson;
 
     @Autowired
     private HttpServletRequest httpServletRequest;
@@ -145,33 +143,21 @@ public class OrderController extends BaseController {
 ////            throw new BusinessException(EmBusinessError.RATELIMIT);
 ////        }
 
-        String token = httpServletRequest.getParameterMap().get("token")[0];
-        if(StringUtils.isEmpty(token)){
-            throw new BusinessException(EmBusinessError.USER_NOT_LOGIN,"用户还未登陆，不能下单");
+//        String token = httpServletRequest.getParameterMap().get("token")[0];
+//        if(StringUtils.isEmpty(token)){
+//            throw new BusinessException(EmBusinessError.USER_NOT_LOGIN,"用户还未登陆，不能下单");
+//        }
+//        //获取用户的登陆信息
+//        UserModel userModel = (UserModel) redisTemplate.opsForValue().get(token);
+//        if(userModel == null){
+//            throw new BusinessException(EmBusinessError.USER_NOT_LOGIN,"用户还未登陆，不能下单");
+//        }
+        //加入库存流水init状态
+        String stockLogId = itemService.initStockLog(itemId,amount);
+        //再去完成对应的下单事务型消息机制
+        if(!mqProducer.transactionAsyncReduceStock(11,itemId,promoId,amount,stockLogId)){
+            throw new BusinessException(EmBusinessError.UNKNOWN_ERROR,"下单失败");
         }
-        //获取用户的登陆信息
-        UserModel userModel = (UserModel) redisTemplate.opsForValue().get(token);
-        if(userModel == null){
-            throw new BusinessException(EmBusinessError.USER_NOT_LOGIN,"用户还未登陆，不能下单");
-        }
-        // 设置同一个用户不能连续点击多次 第二次会用分布式锁防止请求进入
-        Integer userId = userModel.getId();
-        RLock redissonLock = redisson.getLock(String.valueOf(userId));
-        try{
-            redissonLock.lock(30, TimeUnit.SECONDS);
-            redisTemplate.opsForSet().add(userSet,userId);
-            //加入库存流水init状态
-            String stockLogId = itemService.initStockLog(itemId,amount);
-            //再去完成对应的下单事务型消息机制
-            if(!mqProducer.transactionAsyncReduceStock(userModel.getId(),itemId,promoId,amount,stockLogId)){
-                throw new BusinessException(EmBusinessError.UNKNOWN_ERROR,"下单失败");
-            }
-            return CommonReturnType.create(null);
-        }finally {
-            Set<Integer> set = redisTemplate.opsForSet().members(userSet);
-            if(set.contains(userId)){
-                redissonLock.unlock();
-            }
-        }
+        return CommonReturnType.create(null);
     }
 }

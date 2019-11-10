@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 
@@ -32,8 +33,9 @@ public class MqConsumer {
 
     @Value("${mq.topicname}")
     private String topicName;
+    public static int i = 1;
 
-    @Autowired
+    @Resource
     private ItemStockDOMapper itemStockDOMapper;
 
     @PostConstruct
@@ -52,7 +54,9 @@ public class MqConsumer {
                 Integer itemId = (Integer) map.get("itemId");
                 Integer amount = (Integer) map.get("amount");
                 itemStockDOMapper.decreaseStock(itemId,amount);
-                log.info("商品Id为{}库存减{}",itemId,amount );
+                System.out.println(i++);
+                int a = 10 / 0;
+                log.info("商品Id为{}库存减{}",itemId,amount);
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
         });

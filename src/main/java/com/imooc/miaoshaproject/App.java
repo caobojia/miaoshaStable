@@ -18,10 +18,4 @@ public class App {
         SpringApplication.run(App.class, args);
     }
 
-    @Bean
-    public Redisson redisson(){
-        Config config = new Config();
-        config.useSingleServer().setAddress("redis://47.104.175.129:6389").setDatabase(0);
-        return (Redisson) Redisson.create(config);
-    }
 }
