@@ -3,6 +3,7 @@ package com.imooc.miaoshaproject.mq;
 import com.alibaba.fastjson.JSON;
 import com.imooc.miaoshaproject.dao.ItemDOMapper;
 import com.imooc.miaoshaproject.dao.ItemStockDOMapper;
+import com.imooc.miaoshaproject.dataobject.ItemStockDO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
@@ -33,7 +34,6 @@ public class MqConsumer {
 
     @Value("${mq.topicname}")
     private String topicName;
-    public static int i = 1;
 
     @Resource
     private ItemStockDOMapper itemStockDOMapper;
@@ -53,9 +53,12 @@ public class MqConsumer {
                 Map<String,Object>map = JSON.parseObject(jsonString, Map.class);
                 Integer itemId = (Integer) map.get("itemId");
                 Integer amount = (Integer) map.get("amount");
-                itemStockDOMapper.decreaseStock(itemId,amount);
-                System.out.println(i++);
-                int a = 10 / 0;
+                int result;
+                //乐观锁更新
+                do{
+                    ItemStockDO itemStockDO = itemStockDOMapper.selectByItemId(itemId);
+                    result = itemStockDOMapper.decreaseStock(itemId,amount, itemStockDO.getStock());
+                }while(result != 1);
                 log.info("商品Id为{}库存减{}",itemId,amount);
                 return ConsumeConcurrentlyStatus.CONSUME_SUCCESS;
             }
